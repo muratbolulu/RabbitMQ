@@ -1,8 +1,6 @@
-﻿
-//Console.WriteLine("Hello, World!");
-
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 using System.Text;
+using UdemyRabbitMQ.publisher;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri(
@@ -11,18 +9,29 @@ factory.Uri = new Uri(
 using var connection = factory.CreateConnection();
 
 var channel = connection.CreateModel();
-//channel.QueueDeclare("hello-queue", true, false, false);
 
-channel.ExchangeDeclare("logs-fanout", durable:true, type:ExchangeType.Fanout);
+channel.ExchangeDeclare("logs-direct", durable:true, type:ExchangeType.Direct);
+
+Enum.GetNames(typeof(LogNames)).ToList().ForEach(x =>
+{
+    var routeKey = $"route-{x}";
+    var queueName = $"direct-queue-{x}";
+    channel.QueueDeclare(queueName, true,false,false);
+
+    channel.QueueBind(queueName, "logs-direct", routeKey,null);
+});
 
 Enumerable.Range(0, 50).ToList().ForEach(x =>
 {
-    string message = $"Message {x}";
+    LogNames log = (LogNames)new Random().Next(1,5);
+
+    string message = $"log-type: {log}";
 
     var messageBody = Encoding.UTF8.GetBytes(message);
-    //channel.BasicPublish(string.Empty, "hello-queue", null, messageBody);
-    channel.BasicPublish("logs-fanout","", null, messageBody);
-    Console.WriteLine($"Mesaj Gönderilmiştir : {message}");
+
+    var routeKey = $"route-{log}";
+    channel.BasicPublish("logs-direct", routeKey, null, messageBody);
+    Console.WriteLine($"Log Gönderilmiştir : {message}");
 });
 
 Console.ReadLine();
