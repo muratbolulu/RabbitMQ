@@ -1,6 +1,8 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Shared;
 using System.Text;
+using System.Text.Json;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri(
@@ -32,9 +34,12 @@ Console.WriteLine("Loglar dinleniyor..");
 consumer.Received += (sender, e) =>
 {
     var message = Encoding.UTF8.GetString(e.Body.ToArray());
+
+    var product = JsonSerializer.Deserialize<Product>(message);
+
     Thread.Sleep(1000);
 
-    Console.WriteLine("Gelen Mesaj:" + message);
+    Console.WriteLine($"Gelen Mesaj: - {product.ID} - {product.Name} - {product.Price} - {product.Stock}");
 
     channel.BasicAck(e.DeliveryTag, true);
 };

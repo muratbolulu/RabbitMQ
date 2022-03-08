@@ -1,5 +1,7 @@
 ﻿using RabbitMQ.Client;
+using Shared;
 using System.Text;
+using System.Text.Json;
 using UdemyRabbitMQ.publisher;
 
 var factory = new ConnectionFactory();
@@ -20,9 +22,14 @@ var properties = channel.CreateBasicProperties();
 properties.Headers = headers;
 properties.Persistent = true; //mesajlarımın kalıcı kale gelmesi içindir.
 
+
+var product = new Product { ID = 1, Name = "Kalem", Price = 350, Stock = 12 };
+var productJsonString = JsonSerializer.Serialize(product);
+
+
 //var message = Encoding.UTF8.GetString(e.Body.ToArray());
 channel.BasicPublish("header-exchange", string.Empty,properties
-                    ,Encoding.UTF8.GetBytes("header mesajım"));
+                    ,Encoding.UTF8.GetBytes(productJsonString));
 
 Console.WriteLine("Mesaj gönderilmiştir.");
 Console.ReadLine();
