@@ -9,15 +9,21 @@ factory.Uri = new Uri(
 using var connection = factory.CreateConnection();
 
 var channel = connection.CreateModel();
+channel.ExchangeDeclare("header-exchange", durable: true, type: ExchangeType.Headers);
 
 channel.BasicQos(0, 1, false);
 
 var consumer = new EventingBasicConsumer(channel);
 
 var queueName = channel.QueueDeclare().QueueName;
-//var routeKey = "*.*.Critical";
-var routeKey = "Critical.#";
-channel.QueueBind(queueName, "logs-topic", routeKey);
+
+Dictionary<string,object> headers = new Dictionary<string, object>();
+headers.Add("format", "pdf");
+headers.Add("shape", "a4");
+//headers.Add("x-match", "all");//tüm headers parametrelerine bakar.
+headers.Add("x-match", "any");// bir adet headers parametresi uysa yeterli.
+
+channel.QueueBind(queueName, "header-exchange","",headers);
 
 channel.BasicConsume(queueName, false, consumer);
 
@@ -30,10 +36,7 @@ consumer.Received += (sender, e) =>
 
     Console.WriteLine("Gelen Mesaj:" + message);
 
-    //File.AppendAllText("log-critical.txt", message + "\n");
-
     channel.BasicAck(e.DeliveryTag, true);
-    //String consumerTag = channel.BasicConsume(queueName, false, consumer);
 };
 //kuyruktaki mesajlardan 10 varsa 10 işliyor fakat ekrana 9 yazdırıyor.
 String consumerTag = channel.BasicConsume(queueName, false, consumer);
