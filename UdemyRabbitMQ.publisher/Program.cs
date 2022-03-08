@@ -18,6 +18,7 @@ headers.Add("shape", "a4");
 
 var properties = channel.CreateBasicProperties();
 properties.Headers = headers;
+properties.Persistent = true; //mesajlarımın kalıcı kale gelmesi içindir.
 
 //var message = Encoding.UTF8.GetString(e.Body.ToArray());
 channel.BasicPublish("header-exchange", string.Empty,properties
