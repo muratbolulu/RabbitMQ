@@ -4,7 +4,7 @@ using System.Text;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri(
-    "amqps://bxjaidjr:hf7zKNpwJDGxBjcAwBiXX_6gYrTgLq4k@toad.rmq.cloudamqp.com/bxjaidjr");
+    "amqps://jkqvnpvo:eXkyQt9XWMfL4QjfIenTHOOc3PDRUC9q@clam.rmq.cloudamqp.com/jkqvnpvo");
 
 using var connection = factory.CreateConnection();
 
@@ -14,7 +14,10 @@ channel.BasicQos(0, 1, false);
 
 var consumer = new EventingBasicConsumer(channel);
 
-var queueName = "direct-queue-Critical";
+var queueName = channel.QueueDeclare().QueueName;
+//var routeKey = "*.*.Critical";
+var routeKey = "Critical.#";
+channel.QueueBind(queueName, "logs-topic", routeKey);
 
 channel.BasicConsume(queueName, false, consumer);
 
