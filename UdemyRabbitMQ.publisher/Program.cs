@@ -4,33 +4,29 @@ using UdemyRabbitMQ.publisher;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri(
-    "amqps://bxjaidjr:hf7zKNpwJDGxBjcAwBiXX_6gYrTgLq4k@toad.rmq.cloudamqp.com/bxjaidjr");
+    "amqps://jkqvnpvo:eXkyQt9XWMfL4QjfIenTHOOc3PDRUC9q@clam.rmq.cloudamqp.com/jkqvnpvo");
 
 using var connection = factory.CreateConnection();
 
 var channel = connection.CreateModel();
 
-channel.ExchangeDeclare("logs-direct", durable:true, type:ExchangeType.Direct);
+channel.ExchangeDeclare("logs-topic", durable:true, type:ExchangeType.Topic);
 
-Enum.GetNames(typeof(LogNames)).ToList().ForEach(x =>
-{
-    var routeKey = $"route-{x}";
-    var queueName = $"direct-queue-{x}";
-    channel.QueueDeclare(queueName, true,false,false);
-
-    channel.QueueBind(queueName, "logs-direct", routeKey,null);
-});
+Random random = new Random();
 
 Enumerable.Range(0, 50).ToList().ForEach(x =>
 {
-    LogNames log = (LogNames)new Random().Next(1,5);
+    LogNames log1 = (LogNames)random.Next(1, 5);
+    LogNames log2 = (LogNames)random.Next(1, 5);
+    LogNames log3 = (LogNames)random.Next(1, 5);
 
-    string message = $"log-type: {log}";
+    var routeKey = $"{log1}.{log2}.{log3}";
+
+    string message = $"log-type: {log1}-{log2}-{log3}";
 
     var messageBody = Encoding.UTF8.GetBytes(message);
 
-    var routeKey = $"route-{log}";
-    channel.BasicPublish("logs-direct", routeKey, null, messageBody);
+    channel.BasicPublish("logs-topic", routeKey, null, messageBody);
     Console.WriteLine($"Log Gönderilmiştir : {message}");
 });
 
